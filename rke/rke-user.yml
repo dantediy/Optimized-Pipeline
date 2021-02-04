@@ -1,0 +1,40 @@
+---
+# - name: Create rke user with passwordless sudo
+- name: Add gitlab-runner admin user
+  remote_user: root
+  become: true
+  user:
+    name: gitlab-runner
+    shell: /bin/bash
+
+- name: Create sudo file
+  remote_user: root
+  become: true
+  file:
+    path: /etc/sudoers.d/gitlab-runner  
+    state: touch
+
+- name: Give gitlab-runner user passwordless sudo
+  remote_user: root
+  become: true
+  lineinfile:
+    path: /etc/sudoers.d/gitlab-runner
+    state: present
+    line: 'rke ALL=(ALL:ALL) NOPASSWD: ALL'
+
+- name: Create a 2048-bit SSH key
+  remote_user: root
+  become: true
+  user:
+    name: gitlab-runner
+    generate_ssh_key: yes
+    ssh_key_bits: 2048
+    ssh_key_file: .ssh/id_rsa
+
+- name: Set authorized key taken from file
+  remote_user: root
+  become: true
+  authorized_key:
+    user: gitlab-runner
+    state: present
+    key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"

@@ -1,0 +1,7 @@
+---
+- name: run docker
+  hosts: vms
+  become: true
+  roles:
+    - role: '/home/gitlab-runner/ansible/roles/docker'
+    - role: '/home/gitlab-runner/ansible/roles/rke'

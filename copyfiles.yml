@@ -1,0 +1,25 @@
+---
+- hosts: rke-hosts
+  tasks:
+  - name: copy docker file
+    copy: src=/home/gitlab-runner/ansible/docker-add-ssh-key/{{item}} dest=/home/gitlab-runner/ansible/roles/docker/tasks
+    with_items:
+      - docker.yml
+      - add-ssh-key.yml
+      - main.yml
+
+  - name: copy rke file
+    copy: src=/home/gitlab-runner/ansible/rke/{{item}} dest=/home/gitlab-runner/ansible/roles/rke/tasks
+    with_items:
+      - add-user.yml
+      - cluster.yml
+      - rke-disabled-swap.yml
+      - rke-module.yml
+      - rke-user.yml
+      - main.yml
+
+  # - name: copy logging file
+  #   copy: src=/home/gitlab-runner/ansible/elasticsearch/{{item}} dest=/home/gitlab-runner/ansible/roles/logging/tasks
+  #   with_items:
+  #     - elasticsearch.yml
+  #     - main.yml

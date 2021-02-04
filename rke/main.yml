@@ -1,0 +1,6 @@
+---
+- import_tasks: add-user.yml
+# - import_tasks: cluster.yml
+- import_tasks: rke-disabled-swap.yml
+- import_tasks: rke-module.yml
+- import_tasks: rke-user.yml

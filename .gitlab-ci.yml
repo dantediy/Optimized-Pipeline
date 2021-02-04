@@ -1,0 +1,77 @@
+stages:
+  - create-folder
+  - ansible-roles
+  - copy
+  - deploy
+  - helm-monitoring
+  - fluentb
+  - kibana
+
+Create ansible folder:
+  stage: create-folder
+  tags:
+    - Local-Runner
+  script:
+    - mkdir /home/gitlab-runner/ansible
+    - cp -rf * /home/gitlab-runner/ansible
+
+Create Ansible Roles:
+  stage: ansible-roles
+  tags:
+    - Local-Runner
+  script:
+    - ansible-galaxy init /home/gitlab-runner/ansible/roles/docker
+    - ansible-galaxy init /home/gitlab-runner/ansible/roles/rke
+
+Copy Files:
+  stage: copy
+  tags:
+    - Local-Runner
+  script:
+    - cd /home/gitlab-runner/ansible
+    - ansible-playbook copyfiles.yml
+
+Deployment:
+  stage: deploy
+  tags:
+    - Local-Runner
+  script:
+    - ansible-playbook deploy.yml --syntax
+    - ansible-playbook deploy.yml
+    - rke up --config /home/gitlab-runner/ansible/rke/cluster.yml
+    - mkdir -p $HOME/.kube
+    - cp -rf /home/gitlab-runner/ansible/rke/kube_config_cluster.yml ~/.kube/config
+    - chown $(id -u):$(id -g) $HOME/.kube/config
+    - kubectl get nodes
+
+Create helm chart monitoring:
+  stage: helm-monitoring
+  tags:
+    - Local-Runner
+  script:
+    - helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    - helm repo update
+    - helm install prometheus prometheus-community/kube-prometheus-stack
+    - kubectl patch service/prometheus-grafana --type='json' -p '[{"op":"replace","path":"/spec/type","value":"NodePort"}]'
+    - kubectl patch service/prometheus-prometheus-oper-prometheus --type='json' -p '[{"op":"replace","path":"/spec/type","value":"NodePort"}]'
+    - kubectl patch service/prometheus-kube-prometheus-prometheus --type='json' -p '[{"op":"replace","path":"/spec/type","value":"NodePort"}]'
+
+Fluent-Bit:
+  stage: fluentb
+  tags:
+    - Local-Runner
+  script:
+    - kubectl create namespace logging
+    - helm repo add stable https://charts.helm.sh/stable
+    - helm install elasticsearch stable/elasticsearch --set master.persistence.enabled=false --set data.persistence.enabled=false --set --namespace=logging --set client.replicas=1 --set data.replicas=1 #--set master.replicas=1 
+    - kubectl create -f https://raw.githubusercontent.com/fluent/fluent-bit-kubernetes-logging/master/fluent-bit-service-account.yaml
+    - kubectl create -f https://raw.githubusercontent.com/fluent/fluent-bit-kubernetes-logging/master/fluent-bit-role.yaml
+    - kubectl create -f https://raw.githubusercontent.com/fluent/fluent-bit-kubernetes-logging/master/fluent-bit-role-binding.yaml
+    - kubectl create -f https://raw.githubusercontent.com/fluent/fluent-bit-kubernetes-logging/master/output/elasticsearch/fluent-bit-configmap.yaml
+    - kubectl create -f /home/gitlab-runner/ansible/fluent-bit-ds.yaml
+Kibana:
+  stage: kibana
+  tags:
+    - Local-Runner
+  script:
+    - helm install kibana stable/kibana --set env.ELASTICSEARCH_HOSTS=http://elasticsearch-client:9200 --set service.type=NodePort --set --namespace=logging
