@@ -1,19 +1,19 @@
 [rke-hosts]
-gitlab-runner ansible_host=10.1.10.10
+gitlab-runner ansible_host="IP"
 
 [rke-hosts:vars]
 ansible_user=gitlab-runner
-ansible_password=1
-ansible_become_user=root
-ansible_become_password=1
+ansible_password="User Pass"
+ansible_become_user="Root ID"
+ansible_become_password="Root Pass"
 
 [vms]
-master ansible_host=10.1.10.47
-worker1 ansible_host=10.1.10.46
-worker2 ansible_host=10.1.10.48
+master ansible_host="IP"
+worker1 ansible_host="IP"
+worker2 ansible_host="IP"
 
 [vms:vars]
-ansible_user=khoa
-ansible_password=1
-ansible_become_password=1
+ansible_user="User ID"
+ansible_password="User Pass"
+ansible_become_password="Root Pass"
 
