@@ -1,7 +1,7 @@
 # If you intened to deploy Kubernetes in an air-gapped environment,
 # please consult the documentation on how to configure custom RKE images.
 nodes:
-- address: 10.1.10.47
+- address: "Master node IP"
   port: "22"
   role:
   - controlplane
@@ -16,7 +16,7 @@ nodes:
   labels: {}
   taints: []
 
-- address: 10.1.10.46
+- address: "Worker Node IP"
   port: "22"
   role:
   - worker
@@ -30,7 +30,7 @@ nodes:
   labels: {}
   taints: []
   
-- address: 10.1.10.48
+- address: "Worker Node IP"
   port: "22"
   role:
   - worker
